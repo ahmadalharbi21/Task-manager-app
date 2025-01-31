@@ -1,3 +1,4 @@
+import streamlit
 
 tasks = []
 status_dict ={}
@@ -93,6 +94,8 @@ def remove_task():
 
 
 def my_app():
+        streamlit.set_page_config(page_title="Task Manager", layout="wide")
+
     while True:
         print("1-Add tasks \n 2-remove tasks \n 3-preview tasks \n 4-Exit ")
         usr = int(input("enter a number"))

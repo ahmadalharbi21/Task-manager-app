@@ -1,18 +1,17 @@
-class colors:
-    # Blue
+import os
+
+
+class Colors:
     SEA_BLUE = '\033[38;5;32m'
     OCEAN_BLUE = '\033[38;5;33m'
     SKY_BLUE = '\033[38;5;39m'
     AQUA = '\033[38;5;45m'
     WAVE_BLUE = '\033[38;5;27m'
-
-    #  Red
     WARNING_RED = '\033[38;5;196m'
     ALERT_RED = '\033[38;5;160m'
     DANGER_RED = '\033[38;5;124m'
     EXIT_COLOR = '\033[38;5;208m'
-
-    ENDC = '\033[0m'  # Reset
+    ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
@@ -21,134 +20,148 @@ tasks = []
 status_dict = {}
 
 
+def clear_screen():
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+
 def handle_input():
     while True:
         try:
-            usrin = int(
-                input(colors.SEA_BLUE + "Please choose an option by entering the corresponding number: " + colors.ENDC))
+            return int(
+                input(Colors.SEA_BLUE + "Please choose an option by entering the corresponding number: " + Colors.ENDC))
         except ValueError:
-            print(colors.ALERT_RED + "Invalid input. Please enter a number from the list." + colors.ENDC)
-        except IndexError:
-            print(colors.ALERT_RED + "Invalid input. Please enter a number from the list." + colors.ENDC)
-        return usrin
+            print(Colors.ALERT_RED + "Invalid input. Please enter a number." + Colors.ENDC)
 
 
-def mapping():
+def update_status():
     for task in tasks:
-        if task in status_dict.values():
-            continue
-        status_dict[task] = 'Uncompleted'
-    for i in list(status_dict.keys()):
-        if i not in tasks:
-            status_dict.pop(i)
+        if task not in status_dict:
+            status_dict[task] = 'Uncompleted'
+    for task in list(status_dict.keys()):
+        if task not in tasks:
+            del status_dict[task]
+
+
 def add_task():
-    try:
-        new_task = input(
-            colors.SEA_BLUE + "\nEnter your task below. Type 0 to return to the previous menu \n >> " + colors.ENDC)
-        if new_task == str(0):
-            my_app()
-    except ValueError:
-        print(colors.ALERT_RED + "Invalid input. Please enter a number." + colors.ENDC)
+    new_task = input(Colors.SEA_BLUE + "\nEnter your task (or type 0 to return): " + Colors.ENDC).strip()
+    if new_task == "0":
+        return
     tasks.append(new_task)
-    print(colors.EXIT_COLOR + f"\nGreat! Your task " + colors.BOLD + f"'{new_task}'" + colors.ENDC + colors.EXIT_COLOR + "is now added.\n" + colors.ENDC)
+    status_dict[new_task] = 'Uncompleted'
+    print(Colors.EXIT_COLOR + f"\nTask '{new_task}' added successfully!\n" + Colors.ENDC)
 
-def preview():
-    userinput = int(input(
-        colors.SEA_BLUE + "\nPlease choose an option:\n" + colors.SKY_BLUE + "1. Show all tasks\n" + colors.OCEAN_BLUE + "2. Show uncompleted tasks\n" + colors.AQUA + "3. Show completed tasks\n" + colors.WAVE_BLUE + "4. Change task status \n" + colors.WARNING_RED + f"5. Back to main menu{colors.ENDC}\n>> " + colors.ENDC))
-    if userinput == 1:
-        if len(tasks) == 0:
-            print(colors.SEA_BLUE + "no tasks yet" + colors.ENDC)
-        else:
-            print(colors.SEA_BLUE + "\n-- Current Tasks --\n" + colors.ENDC)
-            for idx, (task, status) in enumerate(status_dict.items(), 1):
-                print(f"{idx}. {task} -- {status}\n")
-    elif userinput == 2:
-        for idx, (task, status) in enumerate(status_dict.items(), 1):
-            if status == "Uncompleted":
-                print(f"{idx}. {task} -- {status}\n")
-    elif userinput == 3:
-        for idx, (task, status) in enumerate(status_dict.items(), 1):
-            if status == "completed":
-                print(f"{idx}. {task} -- {status}\n")
 
-    elif userinput == 4:
-        while True:
-            counter = 1
-            print(colors.SEA_BLUE + "\nCurrent Tasks: " + colors.ENDC)
-            for task, status in status_dict.items():
-                print(f"{counter} - Task: {task} | Status: {status}\n")
-                counter += 1
+def show_tasks():
+    if not tasks:
+        print(Colors.SEA_BLUE + "\nNo tasks available." + Colors.ENDC)
+        return
 
-            edit = input(
-                colors.BOLD + "\nEnter the task number to toggle status" + colors.BOLD + " (or 'q' to quit): " + colors.ENDC).strip()
+    print(Colors.SEA_BLUE + "\n-- Current Tasks --\n" + Colors.ENDC)
+    for idx, (task, status) in enumerate(status_dict.items(), 1):
+        print(f"{idx}. {task} -- {status}")
 
-            if edit.lower() == 'q':
-                break  # Exit the edit loop
 
-            try:
-                edit = int(edit)
-                if 1 <= edit <= len(status_dict):
-                    task_list = list(status_dict.keys())
-                    selected_task = task_list[edit - 1]
+def show_filtered_tasks(status_filter):
+    filtered_tasks = {task: status for task, status in status_dict.items() if status == status_filter}
+    if not filtered_tasks:
+        print(Colors.SEA_BLUE + "\nNo matching tasks." + Colors.ENDC)
+        return
 
-                    # Toggle status
-                    new_status = "Uncompleted" if status_dict[selected_task] == "completed" else "completed"
-                    status_dict[selected_task] = new_status
-                    print(colors.SEA_BLUE + f"\nTask '{selected_task}' updated to '{new_status}'!")
-                    my_app()
-                else:
-                    print(colors.ALERT_RED + "Invalid task number. Please try again. " + colors.ENDC)
-            except ValueError:
-                print(colors.ALERT_RED + "Invalid input. Enter a number or 'q' to quit. " + colors.ENDC)
-        print(status_dict)
-    elif userinput == 5:
-        my_app()
+    for idx, (task, status) in enumerate(filtered_tasks.items(), 1):
+        print(f"{idx}. {task} -- {status}")
+
+
+def change_task_status():
+    show_tasks()
+    if not tasks:
+        return
+
+    while True:
+        try:
+            task_number = int(
+                input(Colors.BOLD + "\nEnter the task number to toggle status (or 0 to return): " + Colors.ENDC))
+            if task_number == 0:
+                return
+            if 1 <= task_number <= len(status_dict):
+                selected_task = list(status_dict.keys())[task_number - 1]
+                new_status = "Completed" if status_dict[selected_task] == "Uncompleted" else "Uncompleted"
+                status_dict[selected_task] = new_status
+                print(Colors.SEA_BLUE + f"\nTask '{selected_task}' updated to '{new_status}'." + Colors.ENDC)
+                return
+            else:
+                print(Colors.ALERT_RED + "Invalid task number. Please try again." + Colors.ENDC)
+        except ValueError:
+            print(Colors.ALERT_RED + "Invalid input. Please enter a valid task number." + Colors.ENDC)
 
 
 def remove_task():
-    counter = 1
-    for i in tasks:
-        print(f'{counter}- {i}')
-        counter += 1
+    show_tasks()
+    if not tasks:
+        return
+
     while True:
         try:
-            usr_input = int(input(
-                colors.DANGER_RED + "\nEnter the number of task you want to delete or Type 0 to return to the previous menu \n >> " + colors.ENDC))
-            if usr_input == 0:
-                my_app()
-            tasks.pop(usr_input - 1)
-            break
-        except ValueError:
-            print(colors.ALERT_RED + "Invalid input. Please enter a number from the list." + colors.ENDC)
-        except IndexError:
-            print(colors.ALERT_RED + "Invalid input. Please enter a number from the list." + colors.ENDC)
-    for idx, (task, status) in enumerate(status_dict.items(), 1):
-        print(f"{idx}. {task} -- {status}\n")
-
-
-def my_app():
-    while True:
-        try:
-            print(
-                colors.SKY_BLUE + " 1-Add tasks \n" + colors.OCEAN_BLUE + " 2-Preview tasks \n" + colors.AQUA + " 3-Remove tasks \n" + colors.EXIT_COLOR + " 4-Exit " + colors.ENDC)
-            usr = int(
-                input(colors.SKY_BLUE + "Please choose an option by entering the corresponding number: " + colors.ENDC))
-            if usr == 1:
-                add_task()
-                mapping()
-            elif usr == 2:
-                preview()
-                mapping()
-            elif usr == 3:
-                remove_task()
-                mapping()
-            elif usr == 4:
-                break
+            task_number = int(
+                input(Colors.DANGER_RED + "\nEnter the task number to remove (or 0 to return): " + Colors.ENDC))
+            if task_number == 0:
+                return
+            if 1 <= task_number <= len(tasks):
+                removed_task = tasks.pop(task_number - 1)
+                del status_dict[removed_task]
+                print(Colors.EXIT_COLOR + f"\nTask '{removed_task}' removed successfully!\n" + Colors.ENDC)
+                return
             else:
-                print(colors.ALERT_RED + "Invalid input. Please enter a number within the range." + colors.ENDC)
-                continue
+                print(Colors.ALERT_RED + "Invalid task number. Please try again." + Colors.ENDC)
         except ValueError:
-            print(colors.ALERT_RED + "Invalid input. Please enter a number." + colors.ENDC)
+            print(Colors.ALERT_RED + "Invalid input. Please enter a valid number." + Colors.ENDC)
 
 
-my_app()
+def preview_tasks():
+    while True:
+        print(Colors.SEA_BLUE + "\nChoose an option:\n" +
+              Colors.SKY_BLUE + "1. Show all tasks\n" +
+              Colors.OCEAN_BLUE + "2. Show uncompleted tasks\n" +
+              Colors.AQUA + "3. Show completed tasks\n" +
+              Colors.WAVE_BLUE + "4. Change task status\n" +
+              Colors.WARNING_RED + "5. Back to main menu" + Colors.ENDC)
+
+        user_choice = handle_input()
+        if user_choice == 1:
+            show_tasks()
+        elif user_choice == 2:
+            show_filtered_tasks("Uncompleted")
+        elif user_choice == 3:
+            show_filtered_tasks("Completed")
+        elif user_choice == 4:
+            change_task_status()
+        elif user_choice == 5:
+            return
+        else:
+            print(Colors.ALERT_RED + "Invalid input. Please enter a number within the range." + Colors.ENDC)
+
+
+def main_menu():
+    while True:
+        print(Colors.SKY_BLUE + "\nTask Manager:\n" +
+              Colors.OCEAN_BLUE + "1. Add Task\n" +
+              Colors.AQUA + "2. Preview Tasks\n" +
+              Colors.WARNING_RED + "3. Remove Task\n" +
+              Colors.EXIT_COLOR + "4. Exit" + Colors.ENDC)
+
+        user_choice = handle_input()
+        if user_choice == 1:
+            add_task()
+        elif user_choice == 2:
+            preview_tasks()
+        elif user_choice == 3:
+            remove_task()
+        elif user_choice == 4:
+            print(Colors.EXIT_COLOR + "\nExiting Task Manager. Goodbye!" + Colors.ENDC)
+            break
+        else:
+            print(Colors.ALERT_RED + "Invalid input. Please enter a valid number." + Colors.ENDC)
+
+
+if __name__ == "__main__":
+    clear_screen()
+    main_menu()

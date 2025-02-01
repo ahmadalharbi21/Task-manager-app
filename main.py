@@ -2,6 +2,7 @@ import streamlit
 
 tasks = []
 status_dict ={}
+
 def handle_input():
     while True:
         try:
